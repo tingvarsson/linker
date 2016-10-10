@@ -5,7 +5,8 @@ A golang based cli application that takes a SOURCE path and sets up symlinks to 
 I needed a simple tool to quickly setup a linux user configuration by symlinking to the actual configuration files kept in a git repository.
 
 ## TODOs
-- [ ] CLI handling
+### Features
+- [X] CLI handling
 - [ ] Read in source files
 - [ ] Switch on existingFile, existingSymlink, newFile
 - [ ] Diff files on content
@@ -14,3 +15,6 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Backup existing files
 - [ ] Add dry-run mode (no changes performed to FS)
 - [ ] Add force mode (no question)
+
+### Improvements
+- [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
