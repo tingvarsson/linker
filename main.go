@@ -3,9 +3,11 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
@@ -83,21 +85,21 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	// else if nothing => handleNewFile
 	// else ERROR/DEBUG (depends on if we should continue or not!)
 	if _, err := os.Lstat(targetPath); os.IsNotExist(err) {
-		return handleNew(targetPath, path)
+		return handleNew(path, targetPath)
 	} else {
-		return handleExisting(targetPath, path)
+		return handleExisting(path, targetPath)
 	}
 
 	return nil
 }
 
-func handleNew(targetPath, sourcePath string) error {
+func handleNew(sourcePath, targetPath string) error {
 	logDebug("handleNew")
 
-	return nil
+	return symlink(sourcePath, targetPath)
 }
 
-func handleExisting(targetPath, sourcePath string) error {
+func handleExisting(sourcePath, targetPath string) error {
 	logDebug("handleExisting")
 
 	targetInfo, err := os.Lstat(targetPath)
@@ -108,10 +110,11 @@ func handleExisting(targetPath, sourcePath string) error {
 
 	targetMode := targetInfo.Mode()
 	logDebug("targetMode:", targetMode)
+
 	if targetMode&os.ModeSymlink == os.ModeSymlink {
-		return handleExistingSymlink()
+		return handleExistingSymlink(sourcePath, targetPath)
 	} else if targetMode.IsRegular() {
-		return handleExistingFile()
+		return handleExistingFile(sourcePath, targetPath)
 	} else {
 		err := errors.New("What the fuck is this? A directory? A bird? A plane? NO IT IS NOT SUPERMAN!")
 		log.Panicln(err)
@@ -121,14 +124,75 @@ func handleExisting(targetPath, sourcePath string) error {
 	return nil
 }
 
-func handleExistingSymlink() error {
+func handleExistingSymlink(sourcePath, targetPath string) error {
 	logDebug("handleExistingSymlink")
+
+	evaluatedTargetPath, err := filepath.EvalSymlinks(targetPath)
+	if err != nil {
+		log.Panicln(err)
+		return err
+	}
+
+	if evaluatedTargetPath == sourcePath {
+		logDebug("Symlink points correctly")
+		return nil
+	} else {
+		logDebug("Symlink points to", evaluatedTargetPath)
+		// TODO: Wrap up or simplify response handling
+		var response string
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		okayResponses := []string{"y", "yes"}
+		if contains(okayResponses, strings.ToLower(response)) {
+			return symlink(sourcePath, targetPath)
+		}
+	}
 
 	return nil
 }
 
-func handleExistingFile() error {
+func handleExistingFile(sourcePath, targetPath string) error {
 	logDebug("handleExistingFile")
+
+	// TODO
+	// 1. check if the content is the same
+	// 2. and ask user if it should be symlinked instead
+
+	return nil
+}
+
+func contains(list []string, item string) bool {
+	for _, i := range list {
+		if i == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+func symlink(sourcePath, targetPath string) error {
+	logDebug("symlink: ", sourcePath, targetPath)
+
+	prepareDirectory(targetPath)
+
+	if err := os.Symlink(sourcePath, targetPath); err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
+}
+
+func prepareDirectory(targetPath string) error {
+	dirPath := filepath.Base(targetPath)
+
+	if err := os.MkdirAll(dirPath, 0777); err != nil {
+		log.Fatal(err)
+		return err
+	}
 
 	return nil
 }
