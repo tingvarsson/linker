@@ -8,10 +8,10 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 ### Features
 - [x] CLI handling
 - [x] Read in source files
-- [ ] Switch on existingFile, existingSymlink, newFile
+- [x] Switch on existingFile, existingSymlink, newFile
 - [ ] Diff files on content
-- [ ] Create directory structure if missing
-- [ ] Create symlink
+- [x] Create directory structure if missing
+- [x] Create symlink
 - [ ] Backup existing files
 - [ ] Add dry-run mode (no changes performed to FS)
 - [ ] Add force mode (no question)
@@ -19,3 +19,5 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 ### Improvements
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
 - [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
+- [ ] Wrap up or simplify response handling
+- [ ] What is the correct FileMode to use instead of 0777?
