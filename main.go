@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -163,7 +165,7 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 func handleExistingFile(sourcePath, targetPath string) error {
 	logDebug("ENTER handleExistingFile()")
 
-	equal, err := compareFiles(sourcePath, targetPath)
+	equal, err := equalFiles(sourcePath, targetPath)
 	if err != nil {
 		log.Panicln(err)
 		return err
@@ -200,10 +202,21 @@ func contains(list []string, item string) bool {
 	return false
 }
 
-func compareFiles(lhs, rhs string) (bool, error) {
+func equalFiles(lhs, rhs string) (bool, error) {
 	logDebug("ENTER compareFiles()")
 
-	return true, nil
+	lhsBytes, err := ioutil.ReadFile(lhs)
+	if err != nil {
+		log.Panicln(err)
+		return false, err
+	}
+	rhsBytes, err := ioutil.ReadFile(rhs)
+	if err != nil {
+		log.Panicln(err)
+		return false, err
+	}
+
+	return bytes.Equal(lhsBytes, rhsBytes), nil
 }
 
 func symlink(sourcePath, targetPath string) error {
