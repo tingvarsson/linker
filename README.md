@@ -8,7 +8,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 ### Features
 - [x] CLI handling
 - [x] Read in source files
-- [ ] Switch on existingFile, existingSymlink, newFile
+- [x] Switch on existingFile, existingSymlink, newFile
 - [ ] Diff files on content
 - [ ] Create directory structure if missing
 - [ ] Create symlink
