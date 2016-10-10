@@ -16,8 +16,17 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Add dry-run mode (no changes performed to FS)
 - [ ] Add force mode (no question)
 
+### Verification
+- [ ] ENV & ARGS (a whole bunch of variations)
+- [ ] new file
+- [ ] new file without directories
+- [ ] existing symlink
+- [ ] existing file
+- [ ] dry-run
+- [ ] Benchmark: Mimic each "handle" test case with a benchmark
+
 ### Improvements
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
 - [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
-- [ ] Wrap up or simplify response handling
-- [ ] What is the correct FileMode to use instead of 0777?
+- [ ] Wrap up or simplify response handling (2 cases atm)
+- [ ] What is the correct FileMode to use when making directories instead of 0777?
