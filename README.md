@@ -10,8 +10,8 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [x] Read in source files
 - [x] Switch on existingFile, existingSymlink, newFile
 - [ ] Diff files on content
-- [ ] Create directory structure if missing
-- [ ] Create symlink
+- [x] Create directory structure if missing
+- [x] Create symlink
 - [ ] Backup existing files
 - [ ] Add dry-run mode (no changes performed to FS)
 - [ ] Add force mode (no question)

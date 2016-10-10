@@ -31,17 +31,24 @@ func init() {
 
 func main() {
 	flag.Parse()
+	envDebug()
 	flagDebug()
 
 	filepath.Walk(*source, handleFile)
 }
 
+func envDebug() {
+	logDebug("ENV $PWD:", os.Getenv("PWD"))
+	logDebug("ENV $USER:", os.Getenv("USER"))
+	logDebug("ENV $HOME:", os.Getenv("HOME"))
+}
+
 func flagDebug() {
-	logDebug("source:", *source)
-	logDebug("target:", *target)
-	logDebug("user:", *user)
-	logDebug("dryrun:", *dryrun)
-	logDebug("debug:", *debug)
+	logDebug("ARG source:", *source)
+	logDebug("ARG target:", *target)
+	logDebug("ARG user:", *user)
+	logDebug("ARG dryrun:", *dryrun)
+	logDebug("ARG debug:", *debug)
 }
 
 // TODO: Integrate debug control into the logger instead of having to have ugly if statements directly in the code
@@ -57,7 +64,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	// Guard clause on directories, no need to handle them
 	sourceInfo, err := os.Stat(path)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatal(err)
 		return err
 	}
 
@@ -133,8 +140,8 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 		logDebug("Symlink points correctly")
 		return nil
 	} else {
-		logDebug("Symlink points to", evaluatedTargetPath)
 		// TODO: Wrap up or simplify response handling
+		log.Println("[INFO] Existing Symlink points to ", evaluatedTargetPath, " ,replace with new symlink? [yN]")
 		var response string
 		_, err := fmt.Scanln(&response)
 		if err != nil {
@@ -152,9 +159,32 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 func handleExistingFile(sourcePath, targetPath string) error {
 	logDebug("ENTER handleExistingFile()")
 
-	// TODO
-	// 1. check if the content is the same
-	// 2. and ask user if it should be symlinked instead
+	equal, err := compareFiles(sourcePath, targetPath)
+	if err != nil {
+		log.Panicln(err)
+		return err
+	}
+
+	if !equal {
+		// TODO: Wrap up or simplify response handling
+		log.Println("[INFO] Existing file differs, replace with symlink anyway? [Yn]")
+		var response string
+		_, err := fmt.Scanln(&response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		okayResponses := []string{"n", "no"}
+		if contains(okayResponses, strings.ToLower(response)) {
+			return nil
+		}
+	}
+
+	if err := os.Remove(targetPath); err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return symlink(sourcePath, targetPath)
 
 	return nil
 }
@@ -167,6 +197,12 @@ func contains(list []string, item string) bool {
 	}
 
 	return false
+}
+
+func compareFiles(lhs, rhs string) (bool, error) {
+	logDebug("ENTER compareFiles()")
+
+	return true, nil
 }
 
 func symlink(sourcePath, targetPath string) error {
@@ -184,6 +220,7 @@ func symlink(sourcePath, targetPath string) error {
 
 func prepareDirectory(targetPath string) error {
 	logDebug("ENTER prepareDirectory()")
+
 	dirPath := filepath.Base(targetPath)
 
 	// TODO: What is the correct FileMode to use instead of 0777?
