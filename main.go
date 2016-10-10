@@ -65,7 +65,6 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	sourceInfo, err := os.Stat(path)
 	if err != nil {
 		log.Fatal(err)
-		return err
 	}
 
 	if sourceInfo.IsDir() {
@@ -181,12 +180,9 @@ func handleExistingFile(sourcePath, targetPath string) error {
 
 	if err := os.Remove(targetPath); err != nil {
 		log.Fatal(err)
-		return err
 	}
 
 	return symlink(sourcePath, targetPath)
-
-	return nil
 }
 
 func contains(list []string, item string) bool {
@@ -212,7 +208,6 @@ func symlink(sourcePath, targetPath string) error {
 
 	if err := os.Symlink(sourcePath, targetPath); err != nil {
 		log.Fatal(err)
-		return err
 	}
 
 	return nil
@@ -226,7 +221,6 @@ func prepareDirectory(targetPath string) error {
 	// TODO: What is the correct FileMode to use instead of 0777?
 	if err := os.MkdirAll(dirPath, 0777); err != nil {
 		log.Fatal(err)
-		return err
 	}
 
 	return nil
