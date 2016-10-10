@@ -6,8 +6,8 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 
 ## TODOs
 ### Features
-- [X] CLI handling
-- [ ] Read in source files
+- [x] CLI handling
+- [x] Read in source files
 - [ ] Switch on existingFile, existingSymlink, newFile
 - [ ] Diff files on content
 - [ ] Create directory structure if missing
@@ -18,3 +18,4 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 
 ### Improvements
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
+- [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
