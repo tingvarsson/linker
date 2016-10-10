@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 )
 
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
@@ -82,7 +82,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	logDebug("Source file:", path)
 
 	// Compute target path
-	relativePath, err := filepath.Rel(*source, path)
+	relativePath, err := filepath.Rel(filepath.Dir(*source), path)
 	if err != nil {
 		log.Panicln(err)
 		return err
@@ -145,21 +145,14 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 	if evaluatedTargetPath == sourcePath {
 		logDebug("Symlink points correctly")
 		return nil
-	} else {
-		// TODO: Wrap up or simplify response handling
-		log.Println("[INFO] Existing Symlink points to ", evaluatedTargetPath, " ,replace with new symlink? [yN]")
-		var response string
-		_, err := fmt.Scanln(&response)
-		if err != nil {
-			log.Fatal(err)
-		}
-		okayResponses := []string{"y", "yes"}
-		if contains(okayResponses, strings.ToLower(response)) {
-			return symlink(sourcePath, targetPath)
-		}
 	}
 
-	return nil
+	if !promptYesOrNo(fmt.Sprintf("[INFO] Existing Symlink points to %s ,replace with new symlink? [yN]", evaluatedTargetPath)) {
+		logDebug("Symlink points incorrectly but is chosen by the user to not be replaced")
+		return nil
+	}
+
+	return removeAndSymlink(sourcePath, targetPath)
 }
 
 func handleExistingFile(sourcePath, targetPath string) error {
@@ -171,35 +164,23 @@ func handleExistingFile(sourcePath, targetPath string) error {
 		return err
 	}
 
-	if !equal {
-		// TODO: Wrap up or simplify response handling
-		log.Println("[INFO] Existing file differs, replace with symlink anyway? [Yn]")
-		var response string
-		_, err := fmt.Scanln(&response)
-		if err != nil {
-			log.Fatal(err)
-		}
-		okayResponses := []string{"n", "no"}
-		if contains(okayResponses, strings.ToLower(response)) {
-			return nil
-		}
+	if !equal && promptYesOrNo("[INFO] Existing file differs, replace with symlink anyway? [yN]") {
+		return nil
 	}
 
-	if err := os.Remove(targetPath); err != nil {
-		log.Fatal(err)
-	}
-
-	return symlink(sourcePath, targetPath)
+	return removeAndSymlink(sourcePath, targetPath)
 }
 
-func contains(list []string, item string) bool {
-	for _, i := range list {
-		if i == item {
-			return true
-		}
+// TODO: Fix so that the prompter accepts an empty string (just newline)
+func promptYesOrNo(output string) bool {
+	log.Print(output)
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	return false
+	re := regexp.MustCompile("(?i)^(y|yes)$")
+	return re.MatchString(response)
 }
 
 func equalFiles(lhs, rhs string) (bool, error) {
@@ -219,6 +200,16 @@ func equalFiles(lhs, rhs string) (bool, error) {
 	return bytes.Equal(lhsBytes, rhsBytes), nil
 }
 
+func removeAndSymlink(sourcePath, targetPath string) error {
+	logDebug("ENTER removeAndSymlink()")
+
+	if err := os.Remove(targetPath); err != nil {
+		log.Fatal(err)
+	}
+
+	return symlink(sourcePath, targetPath)
+}
+
 func symlink(sourcePath, targetPath string) error {
 	logDebug("ENTER symlink()")
 
@@ -234,10 +225,10 @@ func symlink(sourcePath, targetPath string) error {
 func prepareDirectory(targetPath string) error {
 	logDebug("ENTER prepareDirectory()")
 
-	dirPath := filepath.Base(targetPath)
+	dirPath := filepath.Dir(targetPath)
 
-	// TODO: What is the correct FileMode to use instead of 0777?
-	if err := os.MkdirAll(dirPath, 0777); err != nil {
+	// TODO: What is the correct FileMode to use instead of 0755?
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		log.Fatal(err)
 	}
 

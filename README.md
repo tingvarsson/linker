@@ -9,7 +9,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [x] CLI handling
 - [x] Read in source files
 - [x] Switch on existingFile, existingSymlink, newFile
-- [ ] Diff files on content
+- [x] Diff files on content
 - [x] Create directory structure if missing
 - [x] Create symlink
 - [ ] Backup existing files
@@ -28,5 +28,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 ### Improvements
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
 - [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
-- [ ] Wrap up or simplify response handling (2 cases atm)
-- [ ] What is the correct FileMode to use when making directories instead of 0777?
+- [x] Wrap up or simplify response handling (2 cases atm)
+- [ ] What is the correct FileMode to use when making directories instead of 0755?
+- [x] Fix so that a single file can be given as source instead of a directory
+- [ ] Fix so that the prompter accepts an empty string (just newline)
