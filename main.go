@@ -79,11 +79,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	targetPath := filepath.Join(*target, relativePath)
 	logDebug("Target path:", targetPath)
 
-	// TODO: check/handle target
-	// if symlink => handleSymlink
-	// else if file => handleFile
-	// else if nothing => handleNewFile
-	// else ERROR/DEBUG (depends on if we should continue or not!)
+	// Check if a target file exists or not
 	if _, err := os.Lstat(targetPath); os.IsNotExist(err) {
 		return handleNew(path, targetPath)
 	} else {
