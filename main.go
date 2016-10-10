@@ -52,7 +52,7 @@ func logDebug(args ...interface{}) {
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
-	logDebug("handleFile")
+	logDebug("ENTER handleFile()")
 
 	// Guard clause on directories, no need to handle them
 	sourceInfo, err := os.Stat(path)
@@ -90,13 +90,13 @@ func handleFile(path string, info os.FileInfo, err error) error {
 }
 
 func handleNew(sourcePath, targetPath string) error {
-	logDebug("handleNew")
+	logDebug("ENTER handleNew()")
 
 	return symlink(sourcePath, targetPath)
 }
 
 func handleExisting(sourcePath, targetPath string) error {
-	logDebug("handleExisting")
+	logDebug("ENTER handleExisting()")
 
 	targetInfo, err := os.Lstat(targetPath)
 	if err != nil {
@@ -121,7 +121,7 @@ func handleExisting(sourcePath, targetPath string) error {
 }
 
 func handleExistingSymlink(sourcePath, targetPath string) error {
-	logDebug("handleExistingSymlink")
+	logDebug("ENTER handleExistingSymlink()")
 
 	evaluatedTargetPath, err := filepath.EvalSymlinks(targetPath)
 	if err != nil {
@@ -150,7 +150,7 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 }
 
 func handleExistingFile(sourcePath, targetPath string) error {
-	logDebug("handleExistingFile")
+	logDebug("ENTER handleExistingFile()")
 
 	// TODO
 	// 1. check if the content is the same
@@ -170,7 +170,7 @@ func contains(list []string, item string) bool {
 }
 
 func symlink(sourcePath, targetPath string) error {
-	logDebug("symlink: ", sourcePath, targetPath)
+	logDebug("ENTER symlink()")
 
 	prepareDirectory(targetPath)
 
@@ -183,8 +183,10 @@ func symlink(sourcePath, targetPath string) error {
 }
 
 func prepareDirectory(targetPath string) error {
+	logDebug("ENTER prepareDirectory()")
 	dirPath := filepath.Base(targetPath)
 
+	// TODO: What is the correct FileMode to use instead of 0777?
 	if err := os.MkdirAll(dirPath, 0777); err != nil {
 		log.Fatal(err)
 		return err

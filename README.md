@@ -20,3 +20,4 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
 - [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
 - [ ] Wrap up or simplify response handling
+- [ ] What is the correct FileMode to use instead of 0777?
