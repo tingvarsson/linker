@@ -30,20 +30,25 @@ func init() {
 }
 
 func main() {
-	flag.Parse()
-	envDebug()
-	flagDebug()
+	parseArguments()
 
 	filepath.Walk(*source, handleFile)
 }
 
-func envDebug() {
+func parseArguments() {
+	flag.Parse()
+
+	logDebugEnvironment()
+	logDebugArguments()
+}
+
+func logDebugEnvironment() {
 	logDebug("ENV $PWD:", os.Getenv("PWD"))
 	logDebug("ENV $USER:", os.Getenv("USER"))
 	logDebug("ENV $HOME:", os.Getenv("HOME"))
 }
 
-func flagDebug() {
+func logDebugArguments() {
 	logDebug("ARG source:", *source)
 	logDebug("ARG target:", *target)
 	logDebug("ARG user:", *user)
