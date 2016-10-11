@@ -40,6 +40,10 @@ func main() {
 func parseArguments() {
 	flag.Parse()
 
+	if !isDir(*target) {
+		log.Fatal("Target is not a path to a directory")
+	}
+
 	logDebugEnvironment()
 	logDebugArguments()
 }
@@ -69,13 +73,7 @@ func logDebug(args ...interface{}) {
 func handleFile(path string, info os.FileInfo, err error) error {
 	logDebug("ENTER handleFile()")
 
-	// Guard clause on directories, no need to handle them
-	sourceInfo, err := os.Stat(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if sourceInfo.IsDir() {
+	if isDir(path) {
 		logDebug("Ignore directory:", path)
 		return nil
 	}
@@ -96,6 +94,15 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	}
 
 	return nil
+}
+
+func isDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return fileInfo.IsDir()
 }
 
 func extractTargetPath(sourcePath, sourceDir, targetDir string) (string, error) {
