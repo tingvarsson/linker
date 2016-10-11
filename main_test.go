@@ -22,6 +22,7 @@ import (
 // no args, $HOME not set => error
 // -u, $USER not set => error
 func testInitArguments(t *testing.T) {
+
 }
 
 // Verif: S:file w. any scenario
@@ -29,9 +30,9 @@ func testInitArguments(t *testing.T) {
 // Verif: new file
 // Verif: new file without directories
 // Verif: existing symlink (points correctly)
-// Verif: existing symlink (points to other)
+// Verif: existing symlink (points to other) (both yes/no scenario)
 // Verif: existing file (same content)
-// Verif: existing file (different content)
+// Verif: existing file (different content) (both yes/no scenario)
 func testHandleFile(t *testing.T) {
 }
 
