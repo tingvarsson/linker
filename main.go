@@ -165,7 +165,7 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 		return nil
 	}
 
-	if !promptYesOrNo(fmt.Sprintf("[INFO] Existing Symlink points to %s ,replace with new symlink? [yN]", evaluatedTargetPath)) {
+	if !promptYesOrNo("[INFO] Existing Symlink points to %s ,replace with new symlink? [yN]", evaluatedTargetPath) {
 		logDebug("Symlink points incorrectly but is chosen by the user to not be replaced")
 		return nil
 	}
@@ -190,8 +190,9 @@ func handleExistingFile(sourcePath, targetPath string) error {
 }
 
 // TODO: Fix so that the prompter (fmt.Scanln) accepts an empty string (just newline)
-func promptYesOrNo(output string) bool {
-	fmt.Print(output)
+// TODO: Extract prompter to interface/package to enable mocking for test purpose
+func promptYesOrNo(format string, args ...interface{}) bool {
+	fmt.Printf(format, args)
 	var response string
 	_, err := fmt.Scanln(&response)
 	if err != nil {

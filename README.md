@@ -34,3 +34,4 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [x] Fix so that a single file can be given as source instead of a directory
 - [ ] Fix so that the prompter accepts an empty string (just newline)
 - [ ] Extend the logger even further to also have ready generic functionality to log function ENTRY/EXIT
+- [ ] Extract prompter to interface/package to enable mocking for test purpose
