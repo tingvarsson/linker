@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
@@ -21,8 +22,41 @@ import (
 // no args, $PWD not set => error
 // no args, $HOME not set => error
 // -u, $USER not set => error
-func testInitArguments(t *testing.T) {
+func TestParseArguments(t *testing.T) {
+	var cases = []struct {
+		args           []string
+		envPwd         string
+		envHome        string
+		envUser        string
+		expectedSource string
+		expectedTarget string
+	}{
+		{[]string{"linker"}, "/PWD/", "/HOME/", "username", "/PWD/", "/HOME/"},
+	}
 
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+
+	for _, c := range cases {
+		os.Args = c.args
+		if err := os.Setenv("PWD", c.envPwd); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Setenv("HOME", c.envHome); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Setenv("USER", c.envUser); err != nil {
+			t.Fatal(err)
+		}
+		parseArguments()
+		// TODO verify source, target & error
+		if *source != c.expectedSource {
+			t.Errorf("got %s expected %s", *source, c.expectedSource)
+		}
+		if *target != c.expectedTarget {
+			t.Errorf("got %s expected %s", *target, c.expectedTarget)
+		}
+	}
 }
 
 // Verif: S:file w. any scenario
@@ -33,7 +67,7 @@ func testInitArguments(t *testing.T) {
 // Verif: existing symlink (points to other) (both yes/no scenario)
 // Verif: existing file (same content)
 // Verif: existing file (different content) (both yes/no scenario)
-func testHandleFile(t *testing.T) {
+func TestHandleFile(t *testing.T) {
 }
 
 // Verif: dry-run
@@ -43,5 +77,5 @@ func testHandleFile(t *testing.T) {
 // Verif: debug mode (verify printouts?)
 
 // Bench: Setup a major complex scenario including all variations
-func benchHandleFile(t *testing.T) {
+func BenchmarkHandleFile(b *testing.B) {
 }
