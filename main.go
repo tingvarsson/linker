@@ -59,6 +59,7 @@ func logDebugArguments() {
 }
 
 // TODO: Integrate debug control into the logger instead of having to have ugly if statements directly in the code
+// TODO: Extend the logger even further to also have ready generic functionality to log function ENTRY/EXIT
 func logDebug(args ...interface{}) {
 	if *debug {
 		log.Println("[DEBUG]", args)
@@ -79,17 +80,12 @@ func handleFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	logDebug("Source file:", path)
+	logDebug("Source path:", path)
 
-	// Compute target path
-	relativePath, err := filepath.Rel(filepath.Dir(*source), path)
+	targetPath, err := extractTargetPath(path, filepath.Dir(*source), *target)
 	if err != nil {
-		log.Panicln(err)
 		return err
 	}
-	logDebug("Relative source path:", relativePath)
-
-	targetPath := filepath.Join(*target, relativePath)
 	logDebug("Target path:", targetPath)
 
 	// Check if a target file exists or not
@@ -100,6 +96,19 @@ func handleFile(path string, info os.FileInfo, err error) error {
 	}
 
 	return nil
+}
+
+func extractTargetPath(sourcePath, sourceDir, targetDir string) (string, error) {
+	logDebug("ENTER extractTargetPath()")
+
+	relativePath, err := filepath.Rel(sourceDir, sourcePath)
+	if err != nil {
+		log.Panicln(err)
+		return "", err
+	}
+	logDebug("Relative path:", relativePath)
+
+	return filepath.Join(targetDir, relativePath), nil
 }
 
 func handleNew(sourcePath, targetPath string) error {
@@ -173,7 +182,7 @@ func handleExistingFile(sourcePath, targetPath string) error {
 
 // TODO: Fix so that the prompter accepts an empty string (just newline)
 func promptYesOrNo(output string) bool {
-	log.Print(output)
+	fmt.Print(output)
 	var response string
 	_, err := fmt.Scanln(&response)
 	if err != nil {
