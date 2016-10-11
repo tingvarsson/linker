@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/tingvarsson/dlog"
 )
 
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
@@ -46,47 +48,41 @@ func parseArguments() {
 		log.Fatal("Target is not a path to a directory")
 	}
 
+	dlog.SetDebug(*debug)
+
 	logDebugEnvironment()
 	logDebugArguments()
 }
 
 func logDebugEnvironment() {
-	logDebug("ENV $PWD:", os.Getenv("PWD"))
-	logDebug("ENV $USER:", os.Getenv("USER"))
-	logDebug("ENV $HOME:", os.Getenv("HOME"))
+	dlog.Debug("ENV $PWD:", os.Getenv("PWD"))
+	dlog.Debug("ENV $USER:", os.Getenv("USER"))
+	dlog.Debug("ENV $HOME:", os.Getenv("HOME"))
 }
 
 func logDebugArguments() {
-	logDebug("ARG source:", *source)
-	logDebug("ARG target:", *target)
-	logDebug("ARG user:", *user)
-	logDebug("ARG dryrun:", *dryrun)
-	logDebug("ARG debug:", *debug)
-}
-
-// TODO: Integrate debug control into the logger instead of having to have ugly if statements directly in the code
-// TODO: Extend the logger even further to also have ready generic functionality to log function ENTRY/EXIT
-func logDebug(args ...interface{}) {
-	if *debug {
-		log.Println("[DEBUG]", args)
-	}
+	dlog.Debug("ARG source:", *source)
+	dlog.Debug("ARG target:", *target)
+	dlog.Debug("ARG user:", *user)
+	dlog.Debug("ARG dryrun:", *dryrun)
+	dlog.Debug("ARG debug:", *debug)
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
-	logDebug("ENTER handleFile()")
+	dlog.Enter("handleFile()")
 
 	if isDir(path) {
-		logDebug("Ignore directory:", path)
+		dlog.Debug("Ignore directory:", path)
 		return nil
 	}
 
-	logDebug("Source path:", path)
+	dlog.Debug("Source path:", path)
 
 	targetPath, err := extractTargetPath(path, filepath.Dir(*source), *target)
 	if err != nil {
 		return err
 	}
-	logDebug("Target path:", targetPath)
+	dlog.Debug("Target path:", targetPath)
 
 	// Check if a target file exists or not
 	if _, err := os.Lstat(targetPath); os.IsNotExist(err) {
@@ -108,26 +104,26 @@ func isDir(path string) bool {
 }
 
 func extractTargetPath(sourcePath, sourceDir, targetDir string) (string, error) {
-	logDebug("ENTER extractTargetPath()")
+	dlog.Enter("extractTargetPath()")
 
 	relativePath, err := filepath.Rel(sourceDir, sourcePath)
 	if err != nil {
 		log.Panicln(err)
 		return "", err
 	}
-	logDebug("Relative path:", relativePath)
+	dlog.Debug("Relative path:", relativePath)
 
 	return filepath.Join(targetDir, relativePath), nil
 }
 
 func handleNew(sourcePath, targetPath string) error {
-	logDebug("ENTER handleNew()")
+	dlog.Enter("handleNew()")
 
 	return symlink(sourcePath, targetPath)
 }
 
 func handleExisting(sourcePath, targetPath string) error {
-	logDebug("ENTER handleExisting()")
+	dlog.Enter("handleExisting()")
 
 	targetInfo, err := os.Lstat(targetPath)
 	if err != nil {
@@ -136,7 +132,7 @@ func handleExisting(sourcePath, targetPath string) error {
 	}
 
 	targetMode := targetInfo.Mode()
-	logDebug("targetMode:", targetMode)
+	dlog.Debug("targetMode:", targetMode)
 
 	if targetMode&os.ModeSymlink == os.ModeSymlink {
 		return handleExistingSymlink(sourcePath, targetPath)
@@ -152,7 +148,7 @@ func handleExisting(sourcePath, targetPath string) error {
 }
 
 func handleExistingSymlink(sourcePath, targetPath string) error {
-	logDebug("ENTER handleExistingSymlink()")
+	dlog.Enter("handleExistingSymlink()")
 
 	evaluatedTargetPath, err := filepath.EvalSymlinks(targetPath)
 	if err != nil {
@@ -161,12 +157,12 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 	}
 
 	if evaluatedTargetPath == sourcePath {
-		logDebug("Symlink points correctly")
+		dlog.Debug("Symlink points correctly")
 		return nil
 	}
 
 	if !promptYesOrNo("[INFO] Existing Symlink points to %s ,replace with new symlink? [yN]", evaluatedTargetPath) {
-		logDebug("Symlink points incorrectly but is chosen by the user to not be replaced")
+		dlog.Debug("Symlink points incorrectly but is chosen by the user to not be replaced")
 		return nil
 	}
 
@@ -174,7 +170,7 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 }
 
 func handleExistingFile(sourcePath, targetPath string) error {
-	logDebug("ENTER handleExistingFile()")
+	dlog.Enter("handleExistingFile()")
 
 	equal, err := equalFiles(sourcePath, targetPath)
 	if err != nil {
@@ -207,7 +203,7 @@ func promptYesOrNo(format string, args ...interface{}) bool {
 }
 
 func equalFiles(lhs, rhs string) (bool, error) {
-	logDebug("ENTER compareFiles()")
+	dlog.Enter("compareFiles()")
 
 	lhsBytes, err := ioutil.ReadFile(lhs)
 	if err != nil {
@@ -224,7 +220,7 @@ func equalFiles(lhs, rhs string) (bool, error) {
 }
 
 func removeAndSymlink(sourcePath, targetPath string) error {
-	logDebug("ENTER removeAndSymlink()")
+	dlog.Enter("removeAndSymlink()")
 
 	if err := os.Remove(targetPath); err != nil {
 		log.Fatal(err)
@@ -234,7 +230,7 @@ func removeAndSymlink(sourcePath, targetPath string) error {
 }
 
 func symlink(sourcePath, targetPath string) error {
-	logDebug("ENTER symlink()")
+	dlog.Enter("symlink()")
 
 	prepareDirectory(targetPath)
 
@@ -246,7 +242,7 @@ func symlink(sourcePath, targetPath string) error {
 }
 
 func prepareDirectory(targetPath string) error {
-	logDebug("ENTER prepareDirectory()")
+	dlog.Enter("prepareDirectory()")
 
 	dirPath := filepath.Dir(targetPath)
 
