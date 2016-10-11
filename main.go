@@ -6,13 +6,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/tingvarsson/dlog"
 )
+
+var logger *dlog.DebugLogger
 
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
 // Long version arguments
@@ -44,45 +45,45 @@ func main() {
 func parseArguments() {
 	flag.Parse()
 
-	if !isDir(*target) {
-		log.Fatal("Target is not a path to a directory")
-	}
+	logger = dlog.New(os.Stdout, "", 0, *debug)
 
-	dlog.SetDebug(*debug)
+	if !isDir(*target) {
+		logger.Fatal("Target is not a path to a directory")
+	}
 
 	logDebugEnvironment()
 	logDebugArguments()
 }
 
 func logDebugEnvironment() {
-	dlog.Debug("ENV $PWD:", os.Getenv("PWD"))
-	dlog.Debug("ENV $USER:", os.Getenv("USER"))
-	dlog.Debug("ENV $HOME:", os.Getenv("HOME"))
+	logger.Debug("ENV $PWD:", os.Getenv("PWD"))
+	logger.Debug("ENV $USER:", os.Getenv("USER"))
+	logger.Debug("ENV $HOME:", os.Getenv("HOME"))
 }
 
 func logDebugArguments() {
-	dlog.Debug("ARG source:", *source)
-	dlog.Debug("ARG target:", *target)
-	dlog.Debug("ARG user:", *user)
-	dlog.Debug("ARG dryrun:", *dryrun)
-	dlog.Debug("ARG debug:", *debug)
+	logger.Debug("ARG source:", *source)
+	logger.Debug("ARG target:", *target)
+	logger.Debug("ARG user:", *user)
+	logger.Debug("ARG dryrun:", *dryrun)
+	logger.Debug("ARG debug:", *debug)
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
-	dlog.Enter("handleFile()")
+	logger.Enter("handleFile()")
 
 	if isDir(path) {
-		dlog.Debug("Ignore directory:", path)
+		logger.Debug("Ignore directory:", path)
 		return nil
 	}
 
-	dlog.Debug("Source path:", path)
+	logger.Debug("Source path:", path)
 
 	targetPath, err := extractTargetPath(path, filepath.Dir(*source), *target)
 	if err != nil {
 		return err
 	}
-	dlog.Debug("Target path:", targetPath)
+	logger.Debug("Target path:", targetPath)
 
 	// Check if a target file exists or not
 	if _, err := os.Lstat(targetPath); os.IsNotExist(err) {
@@ -97,42 +98,42 @@ func handleFile(path string, info os.FileInfo, err error) error {
 func isDir(path string) bool {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return fileInfo.IsDir()
 }
 
 func extractTargetPath(sourcePath, sourceDir, targetDir string) (string, error) {
-	dlog.Enter("extractTargetPath()")
+	logger.Enter("extractTargetPath()")
 
 	relativePath, err := filepath.Rel(sourceDir, sourcePath)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return "", err
 	}
-	dlog.Debug("Relative path:", relativePath)
+	logger.Debug("Relative path:", relativePath)
 
 	return filepath.Join(targetDir, relativePath), nil
 }
 
 func handleNew(sourcePath, targetPath string) error {
-	dlog.Enter("handleNew()")
+	logger.Enter("handleNew()")
 
 	return symlink(sourcePath, targetPath)
 }
 
 func handleExisting(sourcePath, targetPath string) error {
-	dlog.Enter("handleExisting()")
+	logger.Enter("handleExisting()")
 
 	targetInfo, err := os.Lstat(targetPath)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return err
 	}
 
 	targetMode := targetInfo.Mode()
-	dlog.Debug("targetMode:", targetMode)
+	logger.Debug("targetMode:", targetMode)
 
 	if targetMode&os.ModeSymlink == os.ModeSymlink {
 		return handleExistingSymlink(sourcePath, targetPath)
@@ -140,7 +141,7 @@ func handleExisting(sourcePath, targetPath string) error {
 		return handleExistingFile(sourcePath, targetPath)
 	} else {
 		err := errors.New("What the fuck is this? A directory? A bird? A plane? NO IT IS NOT SUPERMAN!")
-		log.Panicln(err)
+		logger.Panicln(err)
 		return err
 	}
 
@@ -148,21 +149,21 @@ func handleExisting(sourcePath, targetPath string) error {
 }
 
 func handleExistingSymlink(sourcePath, targetPath string) error {
-	dlog.Enter("handleExistingSymlink()")
+	logger.Enter("handleExistingSymlink()")
 
 	evaluatedTargetPath, err := filepath.EvalSymlinks(targetPath)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return err
 	}
 
 	if evaluatedTargetPath == sourcePath {
-		dlog.Debug("Symlink points correctly")
+		logger.Debug("Symlink points correctly")
 		return nil
 	}
 
 	if !promptYesOrNo("[INFO] Existing Symlink points to %s ,replace with new symlink? [yN]", evaluatedTargetPath) {
-		dlog.Debug("Symlink points incorrectly but is chosen by the user to not be replaced")
+		logger.Debug("Symlink points incorrectly but is chosen by the user to not be replaced")
 		return nil
 	}
 
@@ -170,11 +171,11 @@ func handleExistingSymlink(sourcePath, targetPath string) error {
 }
 
 func handleExistingFile(sourcePath, targetPath string) error {
-	dlog.Enter("handleExistingFile()")
+	logger.Enter("handleExistingFile()")
 
 	equal, err := equalFiles(sourcePath, targetPath)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return err
 	}
 
@@ -192,7 +193,7 @@ func promptYesOrNo(format string, args ...interface{}) bool {
 	var response string
 	_, err := fmt.Scanln(&response)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	// (?i) = case insensitive
 	// ^ = match start (exact match)
@@ -203,16 +204,16 @@ func promptYesOrNo(format string, args ...interface{}) bool {
 }
 
 func equalFiles(lhs, rhs string) (bool, error) {
-	dlog.Enter("compareFiles()")
+	logger.Enter("compareFiles()")
 
 	lhsBytes, err := ioutil.ReadFile(lhs)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return false, err
 	}
 	rhsBytes, err := ioutil.ReadFile(rhs)
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 		return false, err
 	}
 
@@ -220,35 +221,35 @@ func equalFiles(lhs, rhs string) (bool, error) {
 }
 
 func removeAndSymlink(sourcePath, targetPath string) error {
-	dlog.Enter("removeAndSymlink()")
+	logger.Enter("removeAndSymlink()")
 
 	if err := os.Remove(targetPath); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return symlink(sourcePath, targetPath)
 }
 
 func symlink(sourcePath, targetPath string) error {
-	dlog.Enter("symlink()")
+	logger.Enter("symlink()")
 
 	prepareDirectory(targetPath)
 
 	if err := os.Symlink(sourcePath, targetPath); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return nil
 }
 
 func prepareDirectory(targetPath string) error {
-	dlog.Enter("prepareDirectory()")
+	logger.Enter("prepareDirectory()")
 
 	dirPath := filepath.Dir(targetPath)
 
 	// TODO: What is the correct FileMode to use instead of 0755?
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return nil

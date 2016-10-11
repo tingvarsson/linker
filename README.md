@@ -15,6 +15,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Backup existing files
 - [ ] Add dry-run mode (no changes performed to FS)
 - [ ] Add force mode (no question)
+- [ ] Add logging to file mode
 
 ### Verification
 - [ ] ENV & ARGS (a whole bunch of variations)
@@ -28,7 +29,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 
 ### Improvements
 - [ ] Double printouts of short/long version arguments in helper (as well as double handling in the code)
-- [ ] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
+- [x] Integrate debug control into the logger instead of having to have ugly if statements directly in the code
 - [x] Wrap up or simplify response handling (2 cases atm)
 - [ ] What is the correct FileMode to use when making directories instead of 0755?
 - [x] Fix so that a single file can be given as source instead of a directory
