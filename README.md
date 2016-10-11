@@ -23,6 +23,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] existing symlink
 - [ ] existing file
 - [ ] dry-run
+- [ ] force
 - [ ] Benchmark: Mimic each "handle" test case with a benchmark
 
 ### Improvements

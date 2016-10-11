@@ -18,6 +18,7 @@ var source = flag.String("source", os.Getenv("PWD"), "path to source of files")
 var target = flag.String("target", os.Getenv("HOME"), "path to symlink target")
 var user = flag.String("user", os.Getenv("USER"), "name of user for which home dir should be used as symlink target")
 var dryrun = flag.Bool("dry-run", false, "Dry-run any operations to the file system")
+var force = flag.Bool("force", false, "Force all, default to yes, operations to the file system")
 var debug = flag.Bool("debug", false, "Output debugging information to the console")
 
 func init() {
@@ -28,6 +29,7 @@ func init() {
 	flag.StringVar(target, "t", os.Getenv("HOME"), "path to symlink target")
 	flag.StringVar(user, "u", os.Getenv("USER"), "name of user for which home dir should be used as symlink target")
 	flag.BoolVar(dryrun, "n", false, "Dry-run any operations to the file system")
+	flag.BoolVar(force, "f", false, "Force all, default to yes, operations to the file system")
 	flag.BoolVar(debug, "d", false, "Output debugging information to the console")
 }
 
