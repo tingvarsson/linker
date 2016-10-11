@@ -189,7 +189,7 @@ func handleExistingFile(sourcePath, targetPath string) error {
 	return removeAndSymlink(sourcePath, targetPath)
 }
 
-// TODO: Fix so that the prompter accepts an empty string (just newline)
+// TODO: Fix so that the prompter (fmt.Scanln) accepts an empty string (just newline)
 func promptYesOrNo(output string) bool {
 	fmt.Print(output)
 	var response string
@@ -197,6 +197,10 @@ func promptYesOrNo(output string) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// (?i) = case insensitive
+	// ^ = match start (exact match)
+	// (y|yes) = accept either y or yes
+	// $ = match end (exact match)
 	re := regexp.MustCompile("(?i)^(y|yes)$")
 	return re.MatchString(response)
 }
