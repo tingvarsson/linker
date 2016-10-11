@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,7 +14,8 @@ import (
 	"github.com/tingvarsson/dlog"
 )
 
-var logger *dlog.DebugLogger
+// TODO: Consider different io.Writer's, e.g. write to file instead of stdout
+var logger = dlog.New(os.Stdout, "", log.LstdFlags)
 
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
 // Long version arguments
@@ -45,7 +47,9 @@ func main() {
 func parseArguments() {
 	flag.Parse()
 
-	logger = dlog.New(os.Stdout, "", 0, *debug)
+	if *debug {
+		logger.EnableDebug()
+	}
 
 	if !isDir(*target) {
 		logger.Fatal("Target is not a path to a directory")
@@ -56,34 +60,34 @@ func parseArguments() {
 }
 
 func logDebugEnvironment() {
-	logger.Debug("ENV $PWD:", os.Getenv("PWD"))
-	logger.Debug("ENV $USER:", os.Getenv("USER"))
-	logger.Debug("ENV $HOME:", os.Getenv("HOME"))
+	logger.Debug("ENV $PWD: ", os.Getenv("PWD"))
+	logger.Debug("ENV $USER: ", os.Getenv("USER"))
+	logger.Debug("ENV $HOME: ", os.Getenv("HOME"))
 }
 
 func logDebugArguments() {
-	logger.Debug("ARG source:", *source)
-	logger.Debug("ARG target:", *target)
-	logger.Debug("ARG user:", *user)
-	logger.Debug("ARG dryrun:", *dryrun)
-	logger.Debug("ARG debug:", *debug)
+	logger.Debug("ARG source: ", *source)
+	logger.Debug("ARG target: ", *target)
+	logger.Debug("ARG user: ", *user)
+	logger.Debug("ARG dryrun: ", *dryrun)
+	logger.Debug("ARG debug: ", *debug)
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
 	logger.Enter("handleFile()")
 
 	if isDir(path) {
-		logger.Debug("Ignore directory:", path)
+		logger.Debug("Ignore directory: ", path)
 		return nil
 	}
 
-	logger.Debug("Source path:", path)
+	logger.Debug("Source path: ", path)
 
 	targetPath, err := extractTargetPath(path, filepath.Dir(*source), *target)
 	if err != nil {
 		return err
 	}
-	logger.Debug("Target path:", targetPath)
+	logger.Debug("Target path: ", targetPath)
 
 	// Check if a target file exists or not
 	if _, err := os.Lstat(targetPath); os.IsNotExist(err) {
@@ -112,7 +116,7 @@ func extractTargetPath(sourcePath, sourceDir, targetDir string) (string, error) 
 		logger.Panicln(err)
 		return "", err
 	}
-	logger.Debug("Relative path:", relativePath)
+	logger.Debug("Relative path: ", relativePath)
 
 	return filepath.Join(targetDir, relativePath), nil
 }
@@ -133,7 +137,7 @@ func handleExisting(sourcePath, targetPath string) error {
 	}
 
 	targetMode := targetInfo.Mode()
-	logger.Debug("targetMode:", targetMode)
+	logger.Debug("targetMode: ", targetMode)
 
 	if targetMode&os.ModeSymlink == os.ModeSymlink {
 		return handleExistingSymlink(sourcePath, targetPath)
