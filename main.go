@@ -32,37 +32,39 @@ const (
 )
 
 // input arguments
-var source string
-var target string
-var dryrun bool
-var force bool
-var debug bool
+var config = struct {
+	source string
+	target string
+	dryrun bool
+	force  bool
+	debug  bool
+}{}
 
 func init() {
 	// TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
-	flag.StringVar(&source, "source", os.Getenv(EnvPWD), FlagUsageSource)
-	flag.StringVar(&target, "target", os.Getenv(EnvHome), FlagUsageTarget)
-	flag.BoolVar(&dryrun, "dry-run", false, FlagUsageDryrun)
-	flag.BoolVar(&force, "force", false, FlagUsageForce)
-	flag.BoolVar(&debug, "debug", false, FlagUsageDebug)
-	flag.StringVar(&source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
-	flag.StringVar(&target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
-	flag.BoolVar(&dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
-	flag.BoolVar(&force, "f", false, FlagUsageForce+FlagUsageShort)
-	flag.BoolVar(&debug, "d", false, FlagUsageDebug+FlagUsageShort)
+	flag.StringVar(&config.source, "source", os.Getenv(EnvPWD), FlagUsageSource)
+	flag.StringVar(&config.target, "target", os.Getenv(EnvHome), FlagUsageTarget)
+	flag.BoolVar(&config.dryrun, "dry-run", false, FlagUsageDryrun)
+	flag.BoolVar(&config.force, "force", false, FlagUsageForce)
+	flag.BoolVar(&config.debug, "debug", false, FlagUsageDebug)
+	flag.StringVar(&config.source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
+	flag.StringVar(&config.target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
+	flag.BoolVar(&config.dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
+	flag.BoolVar(&config.force, "f", false, FlagUsageForce+FlagUsageShort)
+	flag.BoolVar(&config.debug, "d", false, FlagUsageDebug+FlagUsageShort)
 }
 
 func main() {
 	parseArguments()
 	verifyArguments()
 
-	filepath.Walk(source, handleFile)
+	filepath.Walk(config.source, handleFile)
 }
 
 func parseArguments() {
 	flag.Parse()
 
-	if debug {
+	if config.debug {
 		logger.EnableDebug()
 	}
 
@@ -76,17 +78,17 @@ func logDebugEnvironment() {
 }
 
 func logDebugArguments() {
-	logger.Debug("ARG source: ", source)
-	logger.Debug("ARG target: ", target)
-	logger.Debug("ARG dryrun: ", dryrun)
-	logger.Debug("ARG force: ", force)
-	logger.Debug("ARG debug: ", debug)
+	logger.Debug("ARG source: ", config.source)
+	logger.Debug("ARG target: ", config.target)
+	logger.Debug("ARG dryrun: ", config.dryrun)
+	logger.Debug("ARG force: ", config.force)
+	logger.Debug("ARG debug: ", config.debug)
 }
 
 func verifyArguments() {
 	// TODO: Add sanity check of source to be a path
 
-	if !isDir(target) {
+	if !isDir(config.target) {
 		logger.Fatal("Target is not a path to a directory")
 	}
 }
@@ -101,7 +103,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 
 	logger.Debug("Source path: ", path)
 
-	targetPath, err := extractTargetPath(path, filepath.Dir(source), target)
+	targetPath, err := extractTargetPath(path, filepath.Dir(config.source), config.target)
 	if err != nil {
 		return err
 	}
