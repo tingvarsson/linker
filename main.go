@@ -17,25 +17,41 @@ import (
 // TODO: Consider different io.Writer's, e.g. write to file instead of stdout
 var logger = dlog.New(os.Stdout, "", log.LstdFlags)
 
+const (
+	FlagUsageSource = "path to source of files"
+	FlagUsageTarget = "path to symlink target"
+	FlagUsageUser   = "name of user for which home dir should be used as symlink target"
+	FlagUsageDryrun = "dry-run any operations to the file system"
+	FlagUsageForce  = "force all, default to yes, operations to the file system"
+	FlagUsageDebug  = "output debugging information to the console"
+	FlagUsageShort  = " (short version)"
+)
+
+const (
+	EnvPWD  = "PWD"
+	EnvHome = "HOME"
+	EnvUser = "USER"
+)
+
 // TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
 // Long version arguments
-var source = flag.String("source", os.Getenv("PWD"), "path to source of files")
-var target = flag.String("target", os.Getenv("HOME"), "path to symlink target")
-var user = flag.String("user", os.Getenv("USER"), "name of user for which home dir should be used as symlink target")
-var dryrun = flag.Bool("dry-run", false, "Dry-run any operations to the file system")
-var force = flag.Bool("force", false, "Force all, default to yes, operations to the file system")
-var debug = flag.Bool("debug", false, "Output debugging information to the console")
+var source = flag.String("source", os.Getenv(EnvPWD), FlagUsageSource)
+var target = flag.String("target", os.Getenv(EnvHome), FlagUsageTarget)
+var user = flag.String("user", os.Getenv(EnvUser), FlagUsageUser)
+var dryrun = flag.Bool("dry-run", false, FlagUsageDryrun)
+var force = flag.Bool("force", false, FlagUsageForce)
+var debug = flag.Bool("debug", false, FlagUsageDebug)
 
 func init() {
 	// Environment variables
 
 	// Short version arguments
-	flag.StringVar(source, "s", os.Getenv("PWD"), "path to source of files")
-	flag.StringVar(target, "t", os.Getenv("HOME"), "path to symlink target")
-	flag.StringVar(user, "u", os.Getenv("USER"), "name of user for which home dir should be used as symlink target")
-	flag.BoolVar(dryrun, "n", false, "Dry-run any operations to the file system")
-	flag.BoolVar(force, "f", false, "Force all, default to yes, operations to the file system")
-	flag.BoolVar(debug, "d", false, "Output debugging information to the console")
+	flag.StringVar(source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
+	flag.StringVar(target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
+	flag.StringVar(user, "u", os.Getenv(EnvUser), FlagUsageUser+FlagUsageShort)
+	flag.BoolVar(dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
+	flag.BoolVar(force, "f", false, FlagUsageForce+FlagUsageShort)
+	flag.BoolVar(debug, "d", false, FlagUsageDebug+FlagUsageShort)
 }
 
 func main() {
@@ -60,9 +76,9 @@ func parseArguments() {
 }
 
 func logDebugEnvironment() {
-	logger.Debug("ENV $PWD: ", os.Getenv("PWD"))
-	logger.Debug("ENV $USER: ", os.Getenv("USER"))
-	logger.Debug("ENV $HOME: ", os.Getenv("HOME"))
+	logger.Debug("ENV $PWD: ", os.Getenv(EnvPWD))
+	logger.Debug("ENV $USER: ", os.Getenv(EnvUser))
+	logger.Debug("ENV $HOME: ", os.Getenv(EnvHome))
 }
 
 func logDebugArguments() {
