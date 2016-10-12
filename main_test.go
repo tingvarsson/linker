@@ -5,58 +5,83 @@ import (
 	"testing"
 )
 
-// General test ideas
-// either mock fs or create temp files!
-// temp files = test directory with source & target
+const (
+	Command     = "linker"
+	DefaultPWD  = "/PWD/"
+	DefaultHome = "/HOME/"
+	ShortTarget = "/T/"
+	LongTarget  = "/TARGET/"
+	ShortSource = "/S/"
+	LongSource  = "/SOURCE/"
+)
 
-// Verif: ENV & ARGS (a whole bunch of variations)
-// no args => S:$PWD T:$HOME
-// -u => S:$PWD T:/home/$USER
-// -t => S:$PWD T:target
-// -u -t => S:$PWD T:target (target over user)
-// -s => S:source T:$HOME
-// -u nonUser => error
-// -s nonPath => error
-// -t nonDir => error
-// -t nonPath => error
-// no args, $PWD not set => error
-// no args, $HOME not set => error
-// -u, $USER not set => error
+func resetArguments() {
+	source = DefaultPWD
+	target = DefaultHome
+	dryrun = false
+	force = false
+	debug = false
+}
+
+// TODO: Prints a bunch when enabling debug mode, should be handled with a testLogger (that later can be used for log verification)
 func TestParseArguments(t *testing.T) {
 	var cases = []struct {
 		args           []string
-		envPwd         string
-		envHome        string
-		envUser        string
 		expectedSource string
 		expectedTarget string
+		expectedDryrun bool
+		expectedForce  bool
+		expectedDebug  bool
 	}{
-		{[]string{"linker"}, "/PWD/", "/HOME/", "username", "/PWD/", "/HOME/"},
+		{[]string{Command}, DefaultPWD, DefaultHome, false, false, false},
+		{[]string{Command, "-t", ShortTarget}, DefaultPWD, ShortTarget, false, false, false},
+		{[]string{Command, "-target", LongTarget}, DefaultPWD, LongTarget, false, false, false},
+		{[]string{Command, "-s", ShortSource}, ShortSource, DefaultHome, false, false, false},
+		{[]string{Command, "-source", LongSource}, LongSource, DefaultHome, false, false, false},
+		{[]string{Command, "-n"}, DefaultPWD, DefaultHome, true, false, false},
+		{[]string{Command, "-dry-run"}, DefaultPWD, DefaultHome, true, false, false},
+		{[]string{Command, "-f"}, DefaultPWD, DefaultHome, false, true, false},
+		{[]string{Command, "-force"}, DefaultPWD, DefaultHome, false, true, false},
+		{[]string{Command, "-d"}, DefaultPWD, DefaultHome, false, false, true},
+		{[]string{Command, "-debug"}, DefaultPWD, DefaultHome, false, false, true},
+		{[]string{Command, "-s", LongSource, "-t", LongTarget, "-n", "-f", "-d"}, LongSource, LongTarget, true, true, true},
 	}
 
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
-	for _, c := range cases {
+	for i, c := range cases {
+		// Reset & Setup
+		resetArguments()
 		os.Args = c.args
-		if err := os.Setenv("PWD", c.envPwd); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Setenv("HOME", c.envHome); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Setenv("USER", c.envUser); err != nil {
-			t.Fatal(err)
-		}
+
+		// Execute
 		parseArguments()
-		// TODO verify source, target & error
-		if *source != c.expectedSource {
-			t.Errorf("got %s expected %s", *source, c.expectedSource)
+
+		// Verify
+		if source != c.expectedSource {
+			t.Errorf("[CASE:%d] Source is %s expected %s", i, source, c.expectedSource)
 		}
-		if *target != c.expectedTarget {
-			t.Errorf("got %s expected %s", *target, c.expectedTarget)
+		if target != c.expectedTarget {
+			t.Errorf("[CASE:%d] Target is %s expected %s", i, target, c.expectedTarget)
+		}
+		if dryrun != c.expectedDryrun {
+			t.Errorf("[CASE:%d] Dryrun is %t expected %t", i, dryrun, c.expectedDryrun)
+		}
+		if force != c.expectedForce {
+			t.Errorf("[CASE:%d] Force is %t expected %t", i, force, c.expectedForce)
+		}
+		if debug != c.expectedDebug {
+			t.Errorf("[CASE:%d] Debug is %t expected %t", i, debug, c.expectedDebug)
 		}
 	}
+}
+
+// Verif: verification of arguments (source & target)
+// source nonPath => error
+// target nonDir => error
+// target nonPath => error
+func TestVerifyArguments(t *testing.T) {
 }
 
 // Verif: S:file w. any scenario
@@ -75,6 +100,7 @@ func TestHandleFile(t *testing.T) {
 // Veriy: force
 
 // Verif: debug mode (verify printouts?)
+// oldLogger := logger; defer func() {logger = oldLogger}()
 
 // Bench: Setup a major complex scenario including all variations
 func BenchmarkHandleFile(b *testing.B) {

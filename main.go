@@ -20,7 +20,6 @@ var logger = dlog.New(os.Stdout, "", log.LstdFlags)
 const (
 	FlagUsageSource = "path to source of files"
 	FlagUsageTarget = "path to symlink target"
-	FlagUsageUser   = "name of user for which home dir should be used as symlink target"
 	FlagUsageDryrun = "dry-run any operations to the file system"
 	FlagUsageForce  = "force all, default to yes, operations to the file system"
 	FlagUsageDebug  = "output debugging information to the console"
@@ -30,45 +29,41 @@ const (
 const (
 	EnvPWD  = "PWD"
 	EnvHome = "HOME"
-	EnvUser = "USER"
 )
 
-// TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
-// Long version arguments
-var source = flag.String("source", os.Getenv(EnvPWD), FlagUsageSource)
-var target = flag.String("target", os.Getenv(EnvHome), FlagUsageTarget)
-var user = flag.String("user", os.Getenv(EnvUser), FlagUsageUser)
-var dryrun = flag.Bool("dry-run", false, FlagUsageDryrun)
-var force = flag.Bool("force", false, FlagUsageForce)
-var debug = flag.Bool("debug", false, FlagUsageDebug)
+// input arguments
+var source string
+var target string
+var dryrun bool
+var force bool
+var debug bool
 
 func init() {
-	// Environment variables
-
-	// Short version arguments
-	flag.StringVar(source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
-	flag.StringVar(target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
-	flag.StringVar(user, "u", os.Getenv(EnvUser), FlagUsageUser+FlagUsageShort)
-	flag.BoolVar(dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
-	flag.BoolVar(force, "f", false, FlagUsageForce+FlagUsageShort)
-	flag.BoolVar(debug, "d", false, FlagUsageDebug+FlagUsageShort)
+	// TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
+	flag.StringVar(&source, "source", os.Getenv(EnvPWD), FlagUsageSource)
+	flag.StringVar(&target, "target", os.Getenv(EnvHome), FlagUsageTarget)
+	flag.BoolVar(&dryrun, "dry-run", false, FlagUsageDryrun)
+	flag.BoolVar(&force, "force", false, FlagUsageForce)
+	flag.BoolVar(&debug, "debug", false, FlagUsageDebug)
+	flag.StringVar(&source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
+	flag.StringVar(&target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
+	flag.BoolVar(&dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
+	flag.BoolVar(&force, "f", false, FlagUsageForce+FlagUsageShort)
+	flag.BoolVar(&debug, "d", false, FlagUsageDebug+FlagUsageShort)
 }
 
 func main() {
 	parseArguments()
+	verifyArguments()
 
-	filepath.Walk(*source, handleFile)
+	filepath.Walk(source, handleFile)
 }
 
 func parseArguments() {
 	flag.Parse()
 
-	if *debug {
+	if debug {
 		logger.EnableDebug()
-	}
-
-	if !isDir(*target) {
-		logger.Fatal("Target is not a path to a directory")
 	}
 
 	logDebugEnvironment()
@@ -77,16 +72,23 @@ func parseArguments() {
 
 func logDebugEnvironment() {
 	logger.Debug("ENV $PWD: ", os.Getenv(EnvPWD))
-	logger.Debug("ENV $USER: ", os.Getenv(EnvUser))
 	logger.Debug("ENV $HOME: ", os.Getenv(EnvHome))
 }
 
 func logDebugArguments() {
-	logger.Debug("ARG source: ", *source)
-	logger.Debug("ARG target: ", *target)
-	logger.Debug("ARG user: ", *user)
-	logger.Debug("ARG dryrun: ", *dryrun)
-	logger.Debug("ARG debug: ", *debug)
+	logger.Debug("ARG source: ", source)
+	logger.Debug("ARG target: ", target)
+	logger.Debug("ARG dryrun: ", dryrun)
+	logger.Debug("ARG force: ", force)
+	logger.Debug("ARG debug: ", debug)
+}
+
+func verifyArguments() {
+	// TODO: Add sanity check of source to be a path
+
+	if !isDir(target) {
+		logger.Fatal("Target is not a path to a directory")
+	}
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
@@ -99,7 +101,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 
 	logger.Debug("Source path: ", path)
 
-	targetPath, err := extractTargetPath(path, filepath.Dir(*source), *target)
+	targetPath, err := extractTargetPath(path, filepath.Dir(source), target)
 	if err != nil {
 		return err
 	}
