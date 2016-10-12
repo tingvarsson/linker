@@ -24,7 +24,7 @@ func (c *Config) Reset() {
 }
 
 // TODO: Prints a bunch when enabling debug mode, should be handled with a testLogger (that later can be used for log verification)
-func TestParseArguments(t *testing.T) {
+func TestParseFlags(t *testing.T) {
 	var cases = []struct {
 		args           []string
 		expectedSource string
@@ -75,4 +75,11 @@ func TestParseArguments(t *testing.T) {
 			t.Errorf("[CASE:%d] Debug is %t expected %t", i, config.Debug, c.expectedDebug)
 		}
 	}
+}
+
+// TODO Verif: verification of arguments (source & target)
+// source nonPath => error
+// target nonDir => error
+// target nonPath => error
+func TestVerify(t *testing.T) {
 }

@@ -4,13 +4,6 @@ import (
 	"testing"
 )
 
-// Verif: verification of arguments (source & target)
-// source nonPath => error
-// target nonDir => error
-// target nonPath => error
-func TestVerifyArguments(t *testing.T) {
-}
-
 // Verif: S:file w. any scenario
 // Verif: directory => ignore
 // Verif: new file
