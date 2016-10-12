@@ -18,7 +18,7 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Add logging to file mode
 
 ### Verification
-- [ ] ENV & ARGS (a whole bunch of variations)
+- [x] ENV & ARGS (a whole bunch of variations)
 - [ ] new file
 - [ ] new file without directories
 - [ ] existing symlink
@@ -36,3 +36,5 @@ I needed a simple tool to quickly setup a linux user configuration by symlinking
 - [ ] Fix so that the prompter accepts an empty string (just newline)
 - [ ] Extend the logger even further to also have ready generic functionality to log function ENTRY/EXIT
 - [ ] Extract prompter to interface/package to enable mocking for test purpose
+- [ ] Add sanity check of source to be a path
+- [ ] Prints a bunch when enabling debug mode in test, should be handled with a testLogger (that later can be used for log verification)
