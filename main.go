@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,81 +15,17 @@ import (
 
 // TODO: Consider different io.Writer's, e.g. write to file instead of stdout
 var logger = dlog.New(os.Stdout, "", log.LstdFlags)
-
-const (
-	FlagUsageSource = "path to source of files"
-	FlagUsageTarget = "path to symlink target"
-	FlagUsageDryrun = "dry-run any operations to the file system"
-	FlagUsageForce  = "force all, default to yes, operations to the file system"
-	FlagUsageDebug  = "output debugging information to the console"
-	FlagUsageShort  = " (short version)"
-)
-
-const (
-	EnvPWD  = "PWD"
-	EnvHome = "HOME"
-)
-
-// input arguments
-var config = struct {
-	source string
-	target string
-	dryrun bool
-	force  bool
-	debug  bool
-}{}
+var config = NewConfig(logger)
 
 func init() {
-	// TODO: Double printouts of short/long version arguments in helper (as well as double handling in the code)
-	flag.StringVar(&config.source, "source", os.Getenv(EnvPWD), FlagUsageSource)
-	flag.StringVar(&config.target, "target", os.Getenv(EnvHome), FlagUsageTarget)
-	flag.BoolVar(&config.dryrun, "dry-run", false, FlagUsageDryrun)
-	flag.BoolVar(&config.force, "force", false, FlagUsageForce)
-	flag.BoolVar(&config.debug, "debug", false, FlagUsageDebug)
-	flag.StringVar(&config.source, "s", os.Getenv(EnvPWD), FlagUsageSource+FlagUsageShort)
-	flag.StringVar(&config.target, "t", os.Getenv(EnvHome), FlagUsageTarget+FlagUsageShort)
-	flag.BoolVar(&config.dryrun, "n", false, FlagUsageDryrun+FlagUsageShort)
-	flag.BoolVar(&config.force, "f", false, FlagUsageForce+FlagUsageShort)
-	flag.BoolVar(&config.debug, "d", false, FlagUsageDebug+FlagUsageShort)
+	config.Init()
 }
 
 func main() {
-	parseArguments()
-	verifyArguments()
+	config.ParseFlags()
+	config.Verify()
 
 	filepath.Walk(config.source, handleFile)
-}
-
-func parseArguments() {
-	flag.Parse()
-
-	if config.debug {
-		logger.EnableDebug()
-	}
-
-	logDebugEnvironment()
-	logDebugArguments()
-}
-
-func logDebugEnvironment() {
-	logger.Debug("ENV $PWD: ", os.Getenv(EnvPWD))
-	logger.Debug("ENV $HOME: ", os.Getenv(EnvHome))
-}
-
-func logDebugArguments() {
-	logger.Debug("ARG source: ", config.source)
-	logger.Debug("ARG target: ", config.target)
-	logger.Debug("ARG dryrun: ", config.dryrun)
-	logger.Debug("ARG force: ", config.force)
-	logger.Debug("ARG debug: ", config.debug)
-}
-
-func verifyArguments() {
-	// TODO: Add sanity check of source to be a path
-
-	if !isDir(config.target) {
-		logger.Fatal("Target is not a path to a directory")
-	}
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
