@@ -25,7 +25,7 @@ func main() {
 	config.ParseFlags()
 	config.Verify()
 
-	filepath.Walk(config.source, handleFile)
+	filepath.Walk(config.Source, handleFile)
 }
 
 func handleFile(path string, info os.FileInfo, err error) error {
@@ -38,7 +38,7 @@ func handleFile(path string, info os.FileInfo, err error) error {
 
 	logger.Debug("Source path: ", path)
 
-	targetPath, err := extractTargetPath(path, filepath.Dir(config.source), config.target)
+	targetPath, err := extractTargetPath(path, filepath.Dir(config.Source), config.Target)
 	if err != nil {
 		return err
 	}
